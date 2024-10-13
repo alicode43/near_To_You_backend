@@ -25,12 +25,12 @@ const registerUser = asyncHander(async (req, res) => {
 
     // this for image handling only
 
-    const avatarLocalPath=req.files?.avatar[0]?.path;
-    if(!avatarLocalPath){
-        throw new ApiError(400,"avatar is required");
-    }
+    // const avatarLocalPath=req.files?.avatar[0]?.path;
+    // if(!avatarLocalPath){
+    //     throw new ApiError(400,"avatar is required");
+    // }
      
-    const avatar= await uploadOnCloudinary(avatarLocalPath)
+    // const avatar= await uploadOnCloudinary(avatarLocalPath)
 
 
      const user=await User.create({
@@ -39,7 +39,7 @@ const registerUser = asyncHander(async (req, res) => {
     
         password,
         contactNo,
-        avatar:avatar.url
+        // avatar:avatar.url
      })
 
      const createdUser=await User.findById(user._id).select(
