@@ -7,15 +7,15 @@ import {ApiResponse}  from "../utils/ApiResponse.js";
 
 const registerUser = asyncHander(async (req, res) => {
 
-    const {name, email,password,contactNo}=req.body;
+    const {name, email,password}=req.body;
     console.log(name, email,password );
 
-    if([name, email, password,contactNo].some((field)=>{field?.trim()==="" }) ){
+    if([name, email, password].some((field)=>{field?.trim()==="" }) ){
         throw new  ApiError(400,"All fields must be filled")
     }
     
     const isExist= await User.findOne({
-        $or:[{email}, {contactNo}]
+        $or:[{email}]
     })
 
 
@@ -38,7 +38,7 @@ const registerUser = asyncHander(async (req, res) => {
         email,
     
         password,
-        contactNo,
+      //   contactNo,
         // avatar:avatar.url
      })
 

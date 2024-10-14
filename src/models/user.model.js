@@ -20,7 +20,7 @@ const userSchema = new Schema(
         },
          contactNo: {
             type: Number,
-            required: true,
+            // required: true,
           },
         orderHistory:[{
             type:Schema.Types.ObjectId,
