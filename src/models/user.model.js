@@ -63,7 +63,7 @@ userSchema.methods.generateAccessToken=function(){
         expiresIn:process.env.ACCESS_TOKEN_EXPRIRY,
     })
 }
-userSchema.methods.generateRefressToken=function(){
+userSchema.methods.generateRefreshToken=function(){
     jwt.sign({
         _id:this._id,
      
