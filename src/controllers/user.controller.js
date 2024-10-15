@@ -88,44 +88,51 @@ const logInUser= asyncHandler(async (req,res)=>{
          throw new ApiError(401,"Password Incorrect");
       }
       const {refreshToken,accessToken}= await generateAccessTokenAndRefreshToken(user._id);
-      const loginUser=await User.findById(user._id).select(  "-password -refreshToken" )
+      const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
-      const options={
-         httpOnly:true,
-         secure:true,
+      const options = {
+          httpOnly: true,
+          secure: true
       }
-      return res.status(200)
-      .cookie("access_token",accessToken, options)
-      .cookie("refresh_token",refreshToken, options)
+  
+      return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
-         new ApiResponse(
-         200,
-         {user:loginUser,accessToken, refreshToken })
-         )
-       
-})
+          new ApiResponse(
+              200 , 
+              {
+                  user: loggedInUser, accessToken, refreshToken
+              },
+              "User logged In Successfully"
+          )
+      )
+  
+  })
 
 const logOutUser=asyncHandler(async (req, res) => {
 
-   await User.findById(
+   await User.findByIdAndUpdate(
       req.user._id,
       {
          $set:{
             refreshToken:undefined,
-         },
+         }
       },
          {
             new:true,
-         },
+         }
    );
    const options={
       httpOnly:true,
       secure:true,
    }
+   
    return res
    .status(200)
-   .clearCookie("access_token",options)
-   .clearCookie("refresh_token",options)
+   .clearCookie("accessToken",options)
+   .clearCookie("refreshToken",options)
    .json(new ApiResponse(200,{},"User logged out successfully"))
 
     
