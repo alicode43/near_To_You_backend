@@ -21,6 +21,17 @@ const userSchema = new Schema(
       type: Number,
       // required: true,
     },
+    role:{
+      type:String,
+      enum: ['user', 'admin', 'provider'],
+      default: 'user',
+
+    },
+    isVerify:{
+      type:boolean,
+      default: false,
+    },
+
     orderHistory: [
       {
         type: Schema.Types.ObjectId,
