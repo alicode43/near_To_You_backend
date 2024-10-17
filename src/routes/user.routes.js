@@ -1,8 +1,8 @@
 import express, { Router } from "express";
-import { registerUser,logInUser,logOutUser, refreshAccesToken } from "../controllers/user.controller.js";
+import { registerUser,logInUser,logOutUser, refreshAccesToken,verifyUser } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
-
+// import {} from "../controllers/user.controller.js"
 const router = Router();
 
 router.route("/register").post(
@@ -15,6 +15,7 @@ router.route("/register").post(
     registerUser
 );
 router.route("/login").post(logInUser);
+router.route("/verify-register").post(verifyUser);
 
 router.route("/logout").post(verifyJWT, logOutUser);
 router.route("/refresh-token").post(refreshAccesToken);

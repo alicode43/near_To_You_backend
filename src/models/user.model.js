@@ -28,7 +28,7 @@ const userSchema = new Schema(
 
     },
     isVerify:{
-      type:boolean,
+      type:Boolean,
       default: false,
     },
 
