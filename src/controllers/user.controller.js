@@ -42,12 +42,14 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // this for image handling only
 
-  // const avatarLocalPath=req.files?.avatar[0]?.path;
-  // if(!avatarLocalPath){
-  //     throw new ApiError(400,"avatar is required");
-  // }
+  const avatarLocalPath=req.files?.avatar[0]?.path;
+  if(!avatarLocalPath){
+      throw new ApiError(400,"avatar is required");
+  }
 
-  // const avatar= await uploadOnCloudinary(avatarLocalPath)
+  const avatar= await uploadOnCloudinary(avatarLocalPath)
+
+  
   const resend = new Resend(process.env.RESEND_API_KEY);
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const htmlContent = `<strong>Your OTP code is ${otp}</strong>`;
@@ -74,8 +76,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
     password,
 
+
     //   contactNo,
-    // avatar:avatar.url
+    avatar:avatar.url
   });
 
   const createdUser = await User.findById(user._id).select(
@@ -210,6 +213,17 @@ const logOutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
+
+const getUserProfile = asyncHandler(async (req, res) => {
+   const user= await User.findById(req.user._id).select("-password");
+   if (!user) {
+    throw new ApiError(404, "User not found");
+   }
+
+   return res.status(200).json(new ApiResponse(200, user, "User fetched successfully"));
+
+});
+
 const refreshAccesToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
@@ -335,4 +349,5 @@ export {
   updateAccountDetails,
   updateAvatar,
   verifyUser,
+  getUserProfile
 };
