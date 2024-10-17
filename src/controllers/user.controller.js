@@ -52,12 +52,12 @@ const registerUser = asyncHandler(async (req, res) => {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const htmlContent = `<strong>Your OTP code is ${otp}</strong>`;
 
-//   const { data, error } = await resend.emails.send({
-//     from: "Acme <onboarding@resend.dev>",
-//     to: email,
-//     subject: "Verify Your Account",
-//     html: htmlContent,
-//   });
+  const { data, error } = await resend.emails.send({
+    from: "Acme <onboarding@resend.dev>",
+    to: email,
+    subject: "Verify Your Account",
+    html: htmlContent,
+  });
 
   const verify = await Verify.create({
     otp,
