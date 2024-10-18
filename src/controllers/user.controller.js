@@ -21,11 +21,11 @@ const generateAccessTokenAndRefreshToken = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password ,role} = req.body;
   console.log(name, email, password);
 
   if (
-    [name, email, password].some((field) => {
+    [name, email, password,role].some((field) => {
       field?.trim() === "";
     })
   ) {
@@ -42,12 +42,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // this for image handling only
 
-  const avatarLocalPath=req.files?.avatar[0]?.path;
-  if(!avatarLocalPath){
-      throw new ApiError(400,"avatar is required");
-  }
+  // const avatarLocalPath=req.files?.avatar[0]?.path;
+  // if(!avatarLocalPath){
+  //     throw new ApiError(400,"avatar is required");
+  // }
 
-  const avatar= await uploadOnCloudinary(avatarLocalPath)
+  // const avatar= await uploadOnCloudinary(avatarLocalPath)
 
   
   // const resend = new Resend(process.env.RESEND_API_KEY);
@@ -67,6 +67,7 @@ const registerUser = asyncHandler(async (req, res) => {
     otp,
     email,
     isConsumed: false,
+
   });
   if (!verify) {
     throw new ApiError(500, "Otp not created");
@@ -77,10 +78,11 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
 
     password,
+    role,
 
 
     //   contactNo,
-    avatar:avatar.url
+    // avatar:avatar.url.
   });
 
   const createdUser = await User.findById(user._id).select(
