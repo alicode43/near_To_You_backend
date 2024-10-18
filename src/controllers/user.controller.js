@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinery.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import { Resend } from "resend";
+// import { Resend } from "resend";
 import { Verify } from "../models/verifyModel.model.js";
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -50,16 +50,18 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatar= await uploadOnCloudinary(avatarLocalPath)
 
   
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  // const resend = new Resend(process.env.RESEND_API_KEY);
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const htmlContent = `<strong>Your OTP code is ${otp}</strong>`;
 
-  const { data, error } = await resend.emails.send({
-    from: "Acme <onboarding@resend.dev>",
-    to: email,
-    subject: "Verify Your Account",
-    html: htmlContent,
-  });
+  // const { data, error } = await resend.emails.send({
+  //   from: "Acme <onboarding@resend.dev>",
+  //   to: email,
+  //   subject: "Verify Your Account",
+  //   html: htmlContent,
+  // });
+
+
 
   const verify = await Verify.create({
     otp,
