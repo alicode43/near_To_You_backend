@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinery.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import axios from 'axios';
 
 import otpVerify from "../utils/OTPverify.js";
 import otpGenerate from "../utils/OTPGenerate.js";
@@ -325,7 +326,7 @@ const googleCallBack=asyncHandler( async (req, res) => {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const REDIRECT_URI =
-    "http://localhost:8000/api/v1/users/google/callbackhttps://near-to-you-backend.onrender.com/api/v1/users/google/callback";
+    "https://near-to-you-backend.onrender.com/api/v1/users/google/callback";
   const
    FRONTEND_URL = "http://localhost:3000/dashboard";
   const scope = "profile email";
@@ -349,7 +350,7 @@ const googleCallBack=asyncHandler( async (req, res) => {
       },
     });
 
-    const { id, email, given_name, family_name, picture, name } = userResponse.data;
+    const { id, email, picture, name } = userResponse.data;
 
     // Step 4: Save user to DB or update if already exists
     let user = await User.findOne({ googleId: id });
@@ -361,7 +362,7 @@ const googleCallBack=asyncHandler( async (req, res) => {
         
         avatar: picture,
       });
-      await user.save();
+      await user.save({ validateBeforeSave: false });
     }
 
       const { refreshToken, accessToken } =
