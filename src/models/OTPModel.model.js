@@ -34,4 +34,4 @@ otpSchema.methods.isExpired=  function(){
 }
 
 
-export const Verify = mongoose.model("Verify", otpSchema);
+export const OTP = mongoose.model("otp", otpSchema);

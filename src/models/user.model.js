@@ -49,6 +49,9 @@ const userSchema = new Schema(
     refreshToken: {
       type: String,
     },
+    googleId:{
+      type:String
+    }
   },
   { timestamps: true }
 );

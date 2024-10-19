@@ -4,8 +4,9 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinery.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-// import { Resend } from "resend";
-import { Verify } from "../models/verifyModel.model.js";
+
+import otpVerify from "../utils/OTPverify.js";
+import otpGenerate from "../utils/OTPGenerate.js";
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
@@ -21,11 +22,11 @@ const generateAccessTokenAndRefreshToken = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password ,role} = req.body;
+  const { name, email, password, role } = req.body;
   console.log(name, email, password);
 
   if (
-    [name, email, password,role].some((field) => {
+    [name, email, password, role].some((field) => {
       field?.trim() === "";
     })
   ) {
@@ -49,29 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // const avatar= await uploadOnCloudinary(avatarLocalPath)
 
-  
-  // const resend = new Resend(process.env.RESEND_API_KEY);
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const htmlContent = `<strong>Your OTP code is ${otp}</strong>`;
-
-  // const { data, error } = await resend.emails.send({
-  //   from: "Acme <onboarding@resend.dev>",
-  //   to: email,
-  //   subject: "Verify Your Account",
-  //   html: htmlContent,
-  // });
-
-
-
-  const verify = await Verify.create({
-    otp,
-    email,
-    isConsumed: false,
-
-  });
-  if (!verify) {
-    throw new ApiError(500, "Otp not created");
-  }
+  const generateOTP = otpGenerate(email);
 
   const user = await User.create({
     name,
@@ -79,7 +58,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
     password,
     role,
-
 
     //   contactNo,
     // avatar:avatar.url.
@@ -97,43 +75,14 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdUser, "User created successfully"));
 });
 
-
-
 const verifyUser = asyncHandler(async (req, res) => {
   const { otp, email } = req.body;
-  if (
-    [otp, email].some((field) => {
-      field?.trim() === "";
-    })
-  ) {
-    throw new ApiError(400, "All fields must be filled");
-  }
-  const verify = await Verify.findOne({
-    email,
-  });
+  const OTPverify = otpVerify(otp, email);
 
-  if (!verify) {
-    throw new ApiError(404, "Email not found");
+  if (!OTPverify) {
+    throw new ApiError(400, "OTP not verified");
   }
-  if(verify.isConsumed){
-   throw new ApiError(400, "Otp is already used");
-}
 
-  const isOtpCorrect = await verify.isOTPCorrect(otp);
-  const isExpired = await verify.isExpired();
-   const date=new Date(Date.now());
-//   console.log(date, Date.now())
-//   console.log(isOtpCorrect, verify.otp, verify.expriryTime, Date.now()  );
-
- 
-   if (otp != verify.otp) {
-    throw new ApiError(400, "Otp is incorrect");
-  } else if (isExpired) {
-    throw new ApiError(400, "Otp is expired");
-  }
-  verify.isConsumed = true;
-verify.save();
-  
   const user = await User.findOneAndUpdate(
     { email: email },
     {
@@ -151,6 +100,7 @@ verify.save();
     .status(200)
     .json(new ApiResponse(200, user, "User verified successfully"));
 });
+
 const logInUser = asyncHandler(async (req, res) => {
   const { email, password, contactNo } = req.body;
   const user = await User.findOne({
@@ -217,15 +167,15 @@ const logOutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
-
 const getUserProfile = asyncHandler(async (req, res) => {
-   const user= await User.findById(req.user._id).select("-password");
-   if (!user) {
+  const user = await User.findById(req.user._id).select("-password");
+  if (!user) {
     throw new ApiError(404, "User not found");
-   }
+  }
 
-   return res.status(200).json(new ApiResponse(200, user, "User fetched successfully"));
-
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"));
 });
 
 const refreshAccesToken = asyncHandler(async (req, res) => {
@@ -344,6 +294,118 @@ const updateAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Avatar updated successfully"));
 });
 
+const otpGenerator = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const otpGenerated = otpGenerate(email);
+  if (!otpGenerated) {
+    throw new ApiError(400, "OTP generation failed");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(201, "", "OTP Generated successfully"));
+});
+
+const googleAuth = asyncHandler(async (req, res) => {
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI =
+    "https://near-to-you-backend.onrender.com/api/v1/users/google/callback";
+  const FRONTEND_URL = "http://localhost:3000/dashboard";
+  const scope = "profile email";
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
+  res.redirect(authUrl);
+});
+
+
+
+
+const googleCallBack=asyncHandler( async (req, res) => {
+  const { code } = req.query;
+
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REDIRECT_URI =
+    "http://localhost:8000/api/v1/users/google/callbackhttps://near-to-you-backend.onrender.com/api/v1/users/google/callback";
+  const
+   FRONTEND_URL = "http://localhost:3000/dashboard";
+  const scope = "profile email";
+
+  try {
+    // Exchange authorization code for access and id tokens
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+      code,
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      redirect_uri: REDIRECT_URI,
+      grant_type: 'authorization_code',
+    });
+
+    const { id_token, access_token } = tokenResponse.data;
+
+    // Step 3: Get user info from Google with the access token
+    const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`, {
+      headers: {
+        Authorization: `Bearer ${id_token}`,
+      },
+    });
+
+    const { id, email, given_name, family_name, picture, name } = userResponse.data;
+
+    // Step 4: Save user to DB or update if already exists
+    let user = await User.findOne({ googleId: id });
+    if (!user) {
+      user = new User({
+        googleId: id,
+        name: name,
+        email,
+        
+        avatar: picture,
+      });
+      await user.save();
+    }
+
+      const { refreshToken, accessToken } =
+    await generateAccessTokenAndRefreshToken(user._id);
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+     res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged In Successfully"
+      )
+    );
+    res.redirect(FRONTEND_URL);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Authentication failed');
+  }
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const generateOTP = otpGenerate(email);
+  if (!generateOTP) {
+    throw new ApiError(500, "OTP generation failed");
+  }
+  const verifyOTP = otpVerify();
+});
+
 export {
   registerUser,
   logInUser,
@@ -353,5 +415,8 @@ export {
   updateAccountDetails,
   updateAvatar,
   verifyUser,
-  getUserProfile
+  getUserProfile,
+  otpGenerator,
+  googleAuth,
+  googleCallBack,
 };

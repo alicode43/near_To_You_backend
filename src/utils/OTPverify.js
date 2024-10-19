@@ -1,6 +1,7 @@
-import { Verify } from "../models/verifyModel.model.js";
+import { OTP } from "../models/OTPModel.model.js";
+import { ApiError } from "./ApiError.js";
 
-export default otpVerify= async function(otp,email){
+const otpVerify= async function(otp,email){
 
     if (
         [otp, email].some((field) => {
@@ -9,7 +10,7 @@ export default otpVerify= async function(otp,email){
       ) {
         throw new ApiError(400, "All fields must be filled");
       }
-      const verify = await Verify.findOne({
+      const verify = await OTP.findOne({
         email,
       });
     
@@ -31,5 +32,9 @@ export default otpVerify= async function(otp,email){
       } else if (isExpired) {
         throw new ApiError(400, "Otp is expired");
       }
+      verify.isConsumed=true;
+      verify.save();
       return true;
 }
+
+export default otpVerify;
