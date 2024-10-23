@@ -381,15 +381,30 @@ const googleCallBack=asyncHandler( async (req, res) => {
     secure: true,
   };
 
-     res
+  return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .redirect(FRONTEND_URL);
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        "User logged In Successfully"
+      )
+    )
+    .redirect(FRONTEND_URL)
   } catch (error) {
     console.error(error);
     res.status(500).send('Authentication failed');
   }
 });
+
+
+
 
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
