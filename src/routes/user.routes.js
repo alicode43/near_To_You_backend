@@ -20,6 +20,7 @@ router.route("/verify-register").post(verifyUser);
 router.route("/generate-otp").post(otpGenerator);
 router.route("/auth/google").get(googleAuth);
 router.route("/google/callback").get(googleCallBack);
+
 router.route("/logout").post(verifyJWT, logOutUser);
 router.route("/get-user-profile").get(verifyJWT, getUserProfile);
 router.route("/refresh-token").post(refreshAccesToken);

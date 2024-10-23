@@ -327,8 +327,7 @@ const googleCallBack=asyncHandler( async (req, res) => {
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const REDIRECT_URI =
     "https://near-to-you-backend.onrender.com/api/v1/users/google/callback";
-  const
-   FRONTEND_URL = "http://localhost:3000/dashboard";
+  const FRONTEND_URL = "http://localhost:3000/dashboard";
   const scope = "profile email";
 
   try {
@@ -353,13 +352,19 @@ const googleCallBack=asyncHandler( async (req, res) => {
     const { id, email, picture, name } = userResponse.data;
 
     // Step 4: Save user to DB or update if already exists
-    let user = await User.findOne({ googleId: id });
+    let user = await User.findOne({
+      $or: [
+        { googleId: id },
+        { email: email }
+      ]
+    });
+
     if (!user) {
       user = new User({
         googleId: id,
         name: name,
         email,
-        
+        isVerify: true,
         avatar: picture,
       });
       await user.save({ validateBeforeSave: false });
@@ -379,19 +384,7 @@ const googleCallBack=asyncHandler( async (req, res) => {
      res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-      new ApiResponse(
-        200,
-        {
-          user: loggedInUser,
-          accessToken,
-          refreshToken,
-        },
-        "User logged In Successfully"
-      )
-    );
-    res.redirect(FRONTEND_URL);
+    .redirect(FRONTEND_URL);
   } catch (error) {
     console.error(error);
     res.status(500).send('Authentication failed');
