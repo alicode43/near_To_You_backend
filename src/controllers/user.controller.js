@@ -327,7 +327,7 @@ const googleCallBack=asyncHandler( async (req, res) => {
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const REDIRECT_URI =
     "https://near-to-you-backend.onrender.com/api/v1/users/google/callback";
-  const FRONTEND_URL = "http://localhost:3000/dashboard";
+  const FRONTEND_URL = "http://localhost:3000";
   const scope = "profile email";
 
   try {
