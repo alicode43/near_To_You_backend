@@ -391,7 +391,8 @@ const googleCallBack=asyncHandler( async (req, res) => {
         {
           user: loggedInUser,
           accessToken,
-          refreshToken,
+          refreshToken, 
+          redirectUrl: FRONTEND_URL,
         },
         "User logged In Successfully"
       )
