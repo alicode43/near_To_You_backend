@@ -5,9 +5,10 @@ import { uploadOnCloudinary } from "../utils/cloudinery.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import axios from 'axios';
-
+import bcrypt from "bcrypt";
 import otpVerify from "../utils/OTPverify.js";
 import otpGenerate from "../utils/OTPGenerate.js";
+import { OTP } from "../models/OTPModel.model.js";
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
@@ -503,14 +504,77 @@ const googleCallBack = asyncHandler(async (req, res) => {
 
 
 
+const generateOTP = asyncHandler(async (req, res) => {
+  const { email ,currPurpose} = req.body;
+  const user= await User.findOne({email});
+  if(!user){
+    throw new ApiError(400, "User not exist");
+  }
+
+  const otpGenerated = otpGenerate(email,currPurpose);
+  console.log(otpGenerated);
+  if (!otpGenerated) {
+    throw new ApiError(400, "OTP generation failed");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(201, "", "OTP Generated successfully"));
+});
+
+const verifyOTP = asyncHandler(async (req, res) => {
+  const { email, otp,currPurpose } = req.body;
+  const verifyOTP = otpVerify(otp, email,currPurpose);
+
+  if (!verifyOTP) {
+    throw new ApiError(400, "OTP not verified");
+  }
+
+  const user = await User.findOneAndUpdate(
+    { email: email },
+    {
+      $set: {
+        isVerify: true,
+      },
+    },
+
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "", "User verified successfully"));
+})
+
+
 
 const forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  const generateOTP = otpGenerate(email);
-  if (!generateOTP) {
-    throw new ApiError(500, "OTP generation failed");
+  const { email ,password} = req.body;
+  const user = await OTP.findOne({ email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
   }
-  const verifyOTP = otpVerify();
+  if(!user.isVerified){
+    throw new ApiError(400, "OTP not verified");
+  }
+  if(user.purpose!="ChangePassword"){
+    throw new ApiError(400, "OTP is not valid for this purpose");
+  }
+  const isExpired = await user.isExpired();
+  if(isExpired){
+    throw new ApiError(400, "OTP is expired");
+  }
+ const newPassword = await bcrypt.hash(password, 10);
+  const userDetails=await User.findOneAndUpdate({email},{
+    $set:{
+      password: newPassword
+    }
+  },{new:true})
+  return res
+    .status(200)
+    .json(new ApiResponse(200, userDetails, "Password updated successfully"));
+
 });
 
 export {
@@ -526,4 +590,7 @@ export {
   otpGenerator,
   googleAuth,
   googleCallBack,
+  forgotPassword,
+  verifyOTP,
+  generateOTP 
 };

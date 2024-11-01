@@ -13,15 +13,23 @@ const otpSchema = new Schema({
     type: Date,
    
   },
+  purpose:{
+    type:String,
+    required:true
+  },
   isConsumed: {
+    type: Boolean,
+    default: false,
+  },
+  isVerified: {
     type: Boolean,
     default: false,
   },
 });
 otpSchema.pre("save", function (next) {
-
-    this.expriryTime = new Date(Date.now() + 10 * 60 * 1000); 
-  
+  if (this.isModified("otp")) {
+    this.expriryTime = new Date(Date.now() + 10 * 60 * 1000);
+  }
   next();
 });
 

@@ -1,7 +1,7 @@
 import { OTP } from "../models/OTPModel.model.js";
 // import { Resend } from "resend";
 
-const otpGenerate=async function(email){
+const otpGenerate=async function(email,currPurpose){
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
       // const resend = new Resend(process.env.RESEND_API_KEY);
@@ -14,17 +14,22 @@ const otpGenerate=async function(email){
   //   html: htmlContent,
   // });
 
+  const expriryTime = new Date(Date.now() + 10 * 60 * 1000);
     const user= await OTP.findOneAndUpdate({email},{
         $set:{
             otp:otp,
+            isConsumed: false,
+            purpose:currPurpose,
+            expriryTime:expriryTime
         }
     })
-
     if(!user){
         const OTPCreate = await OTP.create({
             otp,
             email,
             isConsumed: false,
+            purpose:currPurpose,
+            expriryTime:expriryTime
         
           });
           if (!OTPCreate) {
