@@ -15,7 +15,9 @@ const otpSchema = new Schema({
   },
   purpose:{
     type:String,
-    required:true
+    required:true,
+     default:"change password"
+   
   },
   isConsumed: {
     type: Boolean,

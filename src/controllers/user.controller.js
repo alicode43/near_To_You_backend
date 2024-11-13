@@ -111,7 +111,8 @@ const logInUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-  const isPasswordValid = await user.isPasswordCorrect(password);
+  // const isPasswordValid = await user.isPasswordCorrect(password);
+  const isPasswordValid = await bcrypt.compare(password, user.password);
 
   //   console.log("user is ",user);
   if (!isPasswordValid) {
@@ -246,6 +247,7 @@ const changePassword = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Password updated successfully"));
 });
+
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
