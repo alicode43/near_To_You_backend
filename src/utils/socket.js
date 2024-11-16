@@ -93,6 +93,30 @@ const setupSocketIO = (server) => {
       }
     });
 
+    socket.on("call_user", (data) => {
+      const { userToCall, signalData, from, name } = data;
+      io.to(userToCall).emit("call_user", { signal: signalData, from, name });
+      console.log(`User ${from} is calling ${userToCall}`);
+    });
+
+    socket.on("answer_call", (data) => {
+      const { to, signal } = data;
+      io.to(to).emit("call_accepted", { signal, from: socket.id });
+      console.log(`User ${socket.id} answered call from ${to}`);
+    });
+
+    socket.on("ice_candidate", (data) => {
+      const { candidate, to } = data;
+      io.to(to).emit("ice_candidate", { candidate, from: socket.id });
+      console.log(`ICE candidate from ${socket.id} to ${to}`);
+    });
+
+    socket.on("end_call", (data) => {
+      const { to } = data;
+      io.to(to).emit("call_ended", { from: socket.id });
+      console.log(`User ${socket.id} ended call with ${to}`);
+    });
+
     socket.on("disconnect", (reason) => {
       if (connectedSockets.has(socket.id)) {
         console.log(`A user disconnected due to ${reason} `, --count);

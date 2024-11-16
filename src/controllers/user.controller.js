@@ -414,9 +414,9 @@ const otpGenerator = asyncHandler(async (req, res) => {
 // Function to redirect user to Google login page
 const googleAuth = asyncHandler(async (req, res) => {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  console.log("google auth: " )
   const REDIRECT_URI =
-    "http://localhost:3000";  // Updated Redirect URI for localhost testing
+    "http://localhost:3000/google-callback";  // Updated Redirect URI for localhost testing
   const FRONTEND_URL = "http://localhost:3000"; // Changed to root URL
 
   const scope = "profile email";
@@ -427,11 +427,12 @@ const googleAuth = asyncHandler(async (req, res) => {
 // Google callback function after login
 const googleCallBack = asyncHandler(async (req, res) => {
   const { code } = req.query;
+  console.log("google callback: ", code);
 
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = "http://localhost:3000";  // Consistent Redirect URI for callback
-  const FRONTEND_URL = "http://localhost:3000";  // Final Redirect URL after successful login
+  const REDIRECT_URI = "http://localhost:3000/google-callback";  // Consistent Redirect URI for callback
+  const FRONTEND_URL = "http://localhost:3000/google-callback";  // Final Redirect URL after successful login
 
   try {
     // Step 2: Exchange authorization code for access and ID tokens
