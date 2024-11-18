@@ -130,9 +130,9 @@ const logInUser = asyncHandler(async (req, res) => {
   };
 
   return res
-    .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
+    .status(200)
     .json(
       new ApiResponse(
         200,
@@ -214,9 +214,9 @@ const refreshAccesToken = asyncHandler(async (req, res) => {
       await generateAccessAndRefereshTokens(user._id);
 
     return res
-      .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", newRefreshToken, options)
+      .status(200)
       .json(
         new ApiResponse(
           200,
@@ -309,130 +309,31 @@ const otpGenerator = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, "", "OTP Generated successfully"));
 });
 
-// const googleAuth = asyncHandler(async (req, res) => {
-//   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-//   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-//   const REDIRECT_URI =
-//     "https://near-to-you-backend.onrender.com/api/v1/users/google/callback";
-//   const FRONTEND_URL = "http://localhost:3000/dashboard";
-//   const scope = "profile email";
-//   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
-//   res.redirect(authUrl);
-// });
-
-
-
-
-// const googleCallBack=asyncHandler( async (req, res) => {
-//   const { code } = req.query;
-
-//   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-//   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-//   // const REDIRECT_URI =
-//   //   "https://near-to-you-backend.onrender.com/api/v1/users/google/callback";
-//   const REDIRECT_URI =
-//     "http://localhost:3000/landing";
-//   const FRONTEND_URL = "http://localhost:3000";
-//   const scope = "profile email";
-
-//   try {
-//     // Exchange authorization code for access and id tokens
-//     const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
-//       code,
-//       client_id: CLIENT_ID,
-//       client_secret: CLIENT_SECRET,
-//       redirect_uri: REDIRECT_URI,
-//       grant_type: 'authorization_code',
-//     });
-
-//     const { id_token, access_token } = tokenResponse.data;
-
-//     // Step 3: Get user info from Google with the access token
-//     const userResponse = await axios.get(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`, {
-//       headers: {
-//         Authorization: `Bearer ${id_token}`,
-//       },
-//     });
-
-//     const { id, email, picture, name } = userResponse.data;
-
-//     // Step 4: Save user to DB or update if already exists
-//     let user = await User.findOne({
-//       $or: [
-//         { googleId: id },
-//         { email: email }
-//       ]
-//     });
-
-//     if (!user) {
-//       user = new User({
-//         googleId: id,
-//         name: name,
-//         email,
-//         isVerify: true,
-//         avatar: picture,
-//       });
-//       await user.save({ validateBeforeSave: false });
-//     }
-
-//       const { refreshToken, accessToken } =
-//     await generateAccessTokenAndRefreshToken(user._id);
-//   const loggedInUser = await User.findById(user._id).select(
-//     "-password -refreshToken"
-//   );
-
-//   const options = {
-//     httpOnly: true,
-//     secure: true,
-//   };
-
-//   return res
-//     .status(200)
-//     .cookie("accessToken", accessToken, options)
-//     .cookie("refreshToken", refreshToken, options)
-//     .json(
-//       new ApiResponse(
-//         200,
-//         {
-//           user: loggedInUser,
-//           accessToken,
-//           refreshToken, 
-//           redirectUrl: FRONTEND_URL,
-//         },
-//         "User logged In Successfully"
-//       )
-//     )
-//     .redirect(FRONTEND_URL)
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send('Authentication failed');
-//   }
-// });
-
 
 
 // Function to redirect user to Google login page
 const googleAuth = asyncHandler(async (req, res) => {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  console.log("google auth: " )
+  
   const REDIRECT_URI =
     "http://localhost:3000/google-callback";  // Updated Redirect URI for localhost testing
-  const FRONTEND_URL = "http://localhost:3000"; // Changed to root URL
+  // const FRONTEND_URL = "http://localhost:3000"; // Changed to root URL
 
   const scope = "profile email";
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${scope}`;
+  
   res.redirect(authUrl);
 });
 
 // Google callback function after login
 const googleCallBack = asyncHandler(async (req, res) => {
   const { code } = req.query;
-  console.log("google callback: ", code);
+  // console.log("google callback: ", code);
 
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = "http://localhost:3000/google-callback";  // Consistent Redirect URI for callback
-  const FRONTEND_URL = "http://localhost:3000/google-callback";  // Final Redirect URL after successful login
+  const REDIRECT_URI = "http://localhost:3000/google-callback";  
+  const FRONTEND_URL = "http://localhost:3000/google-callback"; 
 
   try {
     // Step 2: Exchange authorization code for access and ID tokens
@@ -443,10 +344,12 @@ const googleCallBack = asyncHandler(async (req, res) => {
       redirect_uri: REDIRECT_URI,
       grant_type: "authorization_code",
     });
-
+    
+    // if(!tokenResponse){
+    //   throw new ApiError(400, "tokenResponse failed");
+    // }
+    
     const { id_token, access_token } = tokenResponse.data;
-
-    // Step 3: Get user info from Google with the access token
     const userResponse = await axios.get(
       `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`,
       {
@@ -456,9 +359,17 @@ const googleCallBack = asyncHandler(async (req, res) => {
       }
     );
 
-    const { id, email, picture, name } = userResponse.data;
 
-    // Step 4: Save user to DB or update if already exists
+ 
+    console.log("user Response " ,userResponse.data);
+    // if(!userResponse){
+    //   throw new Error("User Response fetched  failed");
+     
+    // }
+    const { id, email, picture, name } = userResponse.data;
+    console.log(id,"  ", email,"  ", picture,"  ", name )
+  
+    
     let user = await User.findOne({
       $or: [{ googleId: id }, { email: email }],
     });
@@ -476,16 +387,15 @@ const googleCallBack = asyncHandler(async (req, res) => {
 
     const { refreshToken, accessToken } = await generateAccessTokenAndRefreshToken(user._id);
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-
+    
     const options = {
       httpOnly: true,
       secure: true,
     };
-
-    return res
-      .status(200)
+    res
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
+      .status(200)
       .json(
         new ApiResponse(
           200,
@@ -493,17 +403,21 @@ const googleCallBack = asyncHandler(async (req, res) => {
             user: loggedInUser,
             accessToken,
             refreshToken,
-            redirectUrl: FRONTEND_URL,
+      
           },
           "User logged In Successfully"
         )
-      )
-      .redirect(FRONTEND_URL);  // Final redirect to frontend after successful login
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Authentication failed");
+      );
+    } catch (error) {
+      // console.error("Error during Google callback:", error.response?.data || error.message);
+      console.error("Error during Google callback:",  error.response?.data);
+      res.status(500).send("Authentication failed");
   }
-});
+});   
+
+
+
+
 
 
 
