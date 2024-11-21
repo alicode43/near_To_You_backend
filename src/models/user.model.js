@@ -40,7 +40,7 @@ const userSchema = new Schema(
     ],
     avatar: {
       type: String,
-      // required:true,
+
     },
     password: {
       type: String,
@@ -52,7 +52,14 @@ const userSchema = new Schema(
     googleId:{
       type:String,
       unique: true
-    }
+    },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpire: {
+      type: Date,
+    },
+    
   },
   { timestamps: true }
 );

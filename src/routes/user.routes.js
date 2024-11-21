@@ -1,5 +1,6 @@
 import express, { Router } from "express";
-import { registerUser,logInUser,logOutUser, refreshAccesToken,verifyUser,getUserProfile, googleAuth,  otpGenerator, googleCallBack,forgotPassword,verifyOTP,generateOTP  } from "../controllers/user.controller.js";
+import { registerUser,logInUser,logOutUser, refreshAccesToken,verifyUser,getUserProfile, googleAuth,  otpGenerator, googleCallBack,forgotPassword,verifyOTP,generateOTP ,resetPassword } 
+from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
 import {verifyJWT} from "../middlewares/auth.middleware.js";
 
@@ -29,6 +30,8 @@ router.route("/refresh-token").post(refreshAccesToken);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/verify-otp").post(verifyOTP);
 router.route("/generate-otp").post(generateOTP );
+router.route("/resetPassword/:token").post(resetPassword );
+
 
 
 

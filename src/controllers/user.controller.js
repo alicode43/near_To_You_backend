@@ -9,7 +9,8 @@ import bcrypt from "bcrypt";
 import otpVerify from "../utils/OTPverify.js";
 import otpGenerate from "../utils/OTPGenerate.js";
 import { OTP } from "../models/OTPModel.model.js";
-
+import crypto from "crypto";
+import sendMail from "../utils/sendMail.js";
 const generateAccessTokenAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -309,8 +310,6 @@ const otpGenerator = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, "", "OTP Generated successfully"));
 });
 
-
-
 // Function to redirect user to Google login page
 const googleAuth = asyncHandler(async (req, res) => {
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -415,12 +414,6 @@ const googleCallBack = asyncHandler(async (req, res) => {
   }
 });   
 
-
-
-
-
-
-
 const generateOTP = asyncHandler(async (req, res) => {
   const { email ,currPurpose} = req.body;
   const user= await User.findOne({email});
@@ -462,36 +455,70 @@ const verifyOTP = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "", "User verified successfully"));
-})
-
-
+});
 
 const forgotPassword = asyncHandler(async (req, res) => {
-  const { email ,password} = req.body;
-  const user = await OTP.findOne({ email });
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-  if(!user.isVerified){
-    throw new ApiError(400, "OTP not verified");
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+    console.log("reset password token  ", resetPasswordToken);
+
+  user.resetPasswordToken = resetPasswordToken;
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+
+
+  try{
+    const mail=sendMail(email,resetUrl);
+
+  }catch(e){
+
+    throw new ApiError(500,"Failed to send reset mail")
   }
-  if(user.purpose!="ChangePassword"){
-    throw new ApiError(400, "OTP is not valid for this purpose");
-  }
-  const isExpired = await user.isExpired();
-  if(isExpired){
-    throw new ApiError(400, "OTP is expired");
-  }
- const newPassword = await bcrypt.hash(password, 10);
-  const userDetails=await User.findOneAndUpdate({email},{
-    $set:{
-      password: newPassword
-    }
-  },{new:true})
+
+
+
   return res
     .status(200)
-    .json(new ApiResponse(200, userDetails, "Password updated successfully"));
+    .json(new ApiResponse(200, {}, "Password reset link sent successfully"));
+});
 
+const resetPassword = asyncHandler(async (req, res) => {
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+    
+  console.log("reset password token in reset ", resetPasswordToken);
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired token");
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password reset successfully"));
 });
 
 export {
@@ -509,5 +536,6 @@ export {
   googleCallBack,
   forgotPassword,
   verifyOTP,
-  generateOTP 
+  generateOTP,
+  resetPassword,
 };
