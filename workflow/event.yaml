@@ -14,5 +14,5 @@ jobs:
     runs-on:ubuntu-latest
     steps:
       uses: actions/checkout@v2
-      - name: Echo "avdfd"
+      - name: Echo "git add ."
         run: echo "The time is $(date)"
